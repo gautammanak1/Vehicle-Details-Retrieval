@@ -1,0 +1,14 @@
+{
+    "alice": {
+        "identity_key": "d07989aff67ce4535e8c2ad1521a2c8884a7375a96f2dc1d0bc0825c0a31eef8",
+        "wallet_key": "J0tMT5yDF/Sd834y3BoCjy5N9u5mUzDmOtDS6ahK44M="
+    },
+    "bob": {
+        "identity_key": "4fa854d6de68e4f60e3597c8a2c3850ece28e1e9c0225930a144a4eec01b4dfb",
+        "wallet_key": "0xF93x3HxK3pjC+8lpbXkBsyjArYYknYWPhtxGwBTD4="
+    },
+    "vehicle_agent": {
+        "identity_key": "310f56581667224927c37ddb9928898b549bc0a5d747d7f975b1fe915ba00af0",
+        "wallet_key": "T8EeIcS64+1R1YaQTlNRnl6Ir7shFTCaiz6hkln3kkI="
+    }
+}

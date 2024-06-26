@@ -1,109 +1,51 @@
 import requests
-from uagents import Agent, Bureau, Context, Model
-# from uagents.network import wait_for_tx_to_complete
-from uagents.setup import fund_agent_if_low
+from pydantic import Field
+from uagents import Agent, Context, Protocol, Model
+from ai_engine import UAgentResponse, UAgentResponseType
+
+# Create an instance of VehicleProtocol
+vehicle_protocol = Protocol(name="vehicle_protocol")
 
 class VehicleDetailsRequest(Model):
-    vehicle_number: str
-    rapidapi_key: str
+    vehicle_number: str = Field(description="Vehicle number to fetch details")
 
 class VehicleDetailsResponse(Model):
-    details: str
+    details: dict = Field(description="Fetched vehicle details")
 
-# class PaymentRequest(Model):
-#     wallet_address: str
-#     amount: int
-#     denom: str
-
-# class TransactionInfo(Model):
-#     tx_hash: str
-
-# AMOUNT = 100
-# DENOM = "atestfet"
-
-# Agents setup
-alice = Agent(name="alice", seed="alice secret phrase")
-bob = Agent(name="bob", seed="bob secret phrase")
-
-fund_agent_if_low(bob.wallet.address())
-fund_agent_if_low(alice.wallet.address())
-
-def get_vehicle_details(vehicle_number, rapidapi_key):
+# Function to get vehicle details from the API
+async def get_vehicle_details(vehicle_number, rapidapi_key):
     url = "https://rto-vehicle-information-verification-india.p.rapidapi.com/api/v1/rc/vehicleinfo"
-    
     payload = {
         "reg_no": vehicle_number,
         "consent": "Y",
         "consent_text": "I hereby declare my consent agreement for fetching my information via AITAN Labs API"
     }
-    
     headers = {
         'content-type': "application/json",
         'X-RapidAPI-Key': rapidapi_key,
         'X-RapidAPI-Host': "rto-vehicle-information-verification-india.p.rapidapi.com"
     }
-    
-    response = requests.post(url, json=payload, headers=headers)
-    
-    return response.text
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": response.status_code, "message": response.text}
 
-# Alice requests vehicle details
-@alice.on_interval(period=10.0)
-async def request_vehicle_details(ctx: Context):
-    vehicle_number = "GJ01JT0459"  # example vehicle number
-    rapidapi_key = "be36d48f25msh2cae51229981e29p1d0cc1jsn5e058b8dbb93"
-    details = get_vehicle_details(vehicle_number, rapidapi_key)
-    await ctx.send(
-        bob.address,
-        VehicleDetailsRequest(
-            vehicle_number=vehicle_number,
-            rapidapi_key=rapidapi_key
-        )
-    )
-    ctx.logger.info(f"Requested vehicle details for {vehicle_number}: {details}")
+# Hardcoded RapidAPI key
+rapidapi_key = ""  # Replace with your actual RapidAPI key be36d48f25msh2cae51229981e29p1d0cc1jsn5e058b8dbb93
 
-@bob.on_message(model=VehicleDetailsRequest, replies=VehicleDetailsResponse)
-async def fetch_vehicle_details(ctx: Context, sender: str, msg: VehicleDetailsRequest):
+@vehicle_protocol.on_message(model=VehicleDetailsRequest)
+async def request_vehicle_details(ctx: Context, sender: str, msg: VehicleDetailsRequest):
     ctx.logger.info(f"Received vehicle details request from {sender}")
-    details = get_vehicle_details(msg.vehicle_number, msg.rapidapi_key)
-    await ctx.send(
-        alice.address,
-        VehicleDetailsResponse(details=details)
-    )
-    ctx.logger.info(f"Fetched vehicle details: {details}")
+    details = await get_vehicle_details(msg.vehicle_number, rapidapi_key)
+    
+    await ctx.send(sender, VehicleDetailsResponse(details=details))
+    ctx.logger.info(f"Sent vehicle details to {sender}")
 
-# # Alice requests payment
-# @alice.on_interval(period=20.0)
-# async def request_funds(ctx: Context):
-#     await ctx.send(
-#         bob.address,
-#         PaymentRequest(
-#             wallet_address=str(ctx.wallet.address()), amount=AMOUNT, denom=DENOM
-#         ),
-#     )
+    await ctx.send(sender, UAgentResponse(message="Vehicle details fetched successfully", type=UAgentResponseType.FINAL))
 
-# @alice.on_message(model=TransactionInfo)
-# async def confirm_transaction(ctx: Context, sender: str, msg: TransactionInfo):
-#     ctx.logger.info(f"Received transaction info from {sender}: {msg}")
-#     tx_resp = await wait_for_tx_to_complete(msg.tx_hash, ctx.ledger)
-#     coin_received = tx_resp.events["coin_received"]
-#     if (
-#         coin_received["receiver"] == str(ctx.wallet.address())
-#         and coin_received["amount"] == f"{AMOUNT}{DENOM}"
-#     ):
-#         ctx.logger.info(f"Transaction was successful: {coin_received}")
-
-# @bob.on_message(model=PaymentRequest, replies=TransactionInfo)
-# async def send_payment(ctx: Context, sender: str, msg: PaymentRequest):
-#     ctx.logger.info(f"Received payment request from {sender}: {msg}")
-#     transaction = ctx.ledger.send_tokens(
-#         msg.wallet_address, msg.amount, msg.denom, ctx.wallet
-#     )
-#     await ctx.send(alice.address, TransactionInfo(tx_hash=transaction.tx_hash))
-
-bureau = Bureau()
-bureau.add(alice)
-bureau.add(bob)
-
+# Create and run the agent
 if __name__ == "__main__":
-    bureau.run()
+    agent = Agent("vehicle_agent")
+    agent.include(vehicle_protocol, publish_manifest=True)
+    agent.run()
