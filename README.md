@@ -1,13 +1,6 @@
-# Vehicle Details and Payment Agent System
+# Vehicle Details
 
-This project demonstrates a decentralized agent-based system where two agents, Alice and Bob, interact to fetch vehicle details from an API and process payments using a blockchain network. The agents are built using the `uagents` framework and interact via a `Bureau` that facilitates communication between them.
 
-## Features
-
-- Alice requests vehicle details from Bob.
-- Bob fetches the vehicle details using the specified API.
-- Alice requests payment from Bob.
-- Bob processes the payment and sends a transaction confirmation back to Alice.
 
 ## Prerequisites
 
@@ -19,8 +12,8 @@ This project demonstrates a decentralized agent-based system where two agents, A
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/your-username/vehicle-details-payment-agent.git
-    cd vehicle-details-payment-agent
+    git clone https://github.com/gautammanak1/Vehicle-Details-Retrieval.git
+    cd Vehicle-Details-Retrieval
     ```
 
 2. **Install the required libraries**:
@@ -36,27 +29,10 @@ This project demonstrates a decentralized agent-based system where two agents, A
 
 2. **Run the Agents**:
     ```sh
-    python main.py
+    python vehicleAgent.py
     ```
 
-## Code Explanation
 
-### Agent Setup
-
-Two agents are set up with predefined seed phrases:
-- **Alice**: Requests vehicle details and payment.
-- **Bob**: Fetches vehicle details and processes payment.
-
-### Vehicle Details Fetching
-
-- **Alice**: Periodically sends a vehicle details request to Bob.
-- **Bob**: Receives the request, fetches the vehicle details from the API, and sends the details back to Alice.
-
-### Payment Processing
-
-- **Alice**: Periodically requests funds from Bob.
-- **Bob**: Receives the payment request, processes the transaction, and sends the transaction info back to Alice.
-- **Alice**: Confirms the transaction upon receiving the transaction info.
 
 ### API Integration
 
